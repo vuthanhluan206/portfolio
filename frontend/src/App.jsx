@@ -1,0 +1,268 @@
+import { useEffect, useState, useCallback } from 'react';
+import './index.css';
+
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import About from './components/About';
+import Skills from './components/Skills';
+import Projects from './components/Projects';
+import Reviews from './components/Reviews';
+import Contact from './components/Contact';
+import LoginModal from './components/LoginModal';
+import AdminPanel from './components/AdminPanel';
+import CVModal from './components/CVModal';
+import { useAuth } from './hooks/useAuth';
+import apiClient from './api/apiClient';
+import StarBackground from './components/StarBackground';
+
+
+export default function App() {
+  const { isLoggedIn, login, logout } = useAuth();
+  const [theme, setTheme] = useState('dark');
+  const [cursorEnabled, setCursorEnabled] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [showCV, setShowCV] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/user?id=1');
+      setUser(res.data);
+      localStorage.setItem('cached_user', JSON.stringify(res.data));
+    } catch {
+      // silently ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  // ── Ghi nhận lượt truy cập của khách (không phải admin) ──
+  // Chỉ đếm 1 lần mỗi phiên trình duyệt (sessionStorage)
+  // Không đếm nếu đang đăng nhập (admin)
+  useEffect(() => {
+    if (isLoggedIn) return;                                 // admin đăng nhập -> bỏ qua
+    if (sessionStorage.getItem('visit_counted')) return;   // đã đếm trong phiên này
+    const today = new Date().toISOString().split('T')[0];
+    apiClient.post(`/daily-visit-stat/increment?date=${today}`)
+      .then(() => sessionStorage.setItem('visit_counted', '1'))
+      .catch(() => {}); // silently ignore errors
+  }, [isLoggedIn]);
+
+  // Close Admin Panel immediately if logged out (e.g. token expired)
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setShowAdmin(false);
+    }
+  }, [isLoggedIn]);
+
+  // ── Theme ──
+  useEffect(() => {
+    document.body.classList.toggle('light-theme', theme === 'light');
+  }, [theme]);
+
+  // ── Toggle cursor-disabled class khi tắt coffee cursor ──
+  useEffect(() => {
+    document.body.classList.toggle('cursor-disabled', !cursorEnabled);
+  }, [cursorEnabled]);
+
+  // ── Coffee cursor ──
+  useEffect(() => {
+    if (!cursorEnabled) return;
+
+    const coffee = document.getElementById('cursorCoffee');
+    const ring = document.getElementById('cursorRing');
+    let ringX = 0, ringY = 0;
+    let animId;
+    let steamCooldown = 0;
+
+    const onMove = (e) => {
+      if (coffee) { coffee.style.left = e.clientX + 'px'; coffee.style.top = e.clientY + 'px'; }
+      // Steam
+      const now = Date.now();
+      if (now - steamCooldown > 180) {
+        steamCooldown = now;
+        const steam = document.createElement('div');
+        steam.className = 'cursor-steam';
+        const drift = (Math.random() - 0.5) * 22;
+        steam.style.setProperty('--sx', drift + 'px');
+        steam.style.left = e.clientX + 'px';
+        steam.style.top = (e.clientY - 20) + 'px';
+        steam.textContent = ['·', '°', '˚', '•'][Math.floor(Math.random() * 4)];
+        document.body.appendChild(steam);
+        setTimeout(() => steam.remove(), 1300);
+      }
+    };
+
+    const animRing = () => {
+      // ring follows with lag — but we need mouseX/Y from somewhere
+      // Store in window
+      ringX += ((window._mx || 0) - ringX) * 0.1;
+      ringY += ((window._my || 0) - ringY) * 0.1;
+      if (ring) { ring.style.left = ringX + 'px'; ring.style.top = ringY + 'px'; }
+      animId = requestAnimationFrame(animRing);
+    };
+
+    const onMove2 = (e) => { window._mx = e.clientX; window._my = e.clientY; };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mousemove', onMove2, { passive: true });
+    animRing();
+
+    // Code mode on interactive elements
+    const addCodeMode = () => {
+      document.querySelectorAll('a, button, .project-card, .contact-btn, .nav-link').forEach(el => {
+        el.addEventListener('mouseenter', () => { coffee?.classList.add('code-mode'); ring?.classList.add('code-mode'); });
+        el.addEventListener('mouseleave', () => { coffee?.classList.remove('code-mode'); ring?.classList.remove('code-mode'); });
+      });
+    };
+    addCodeMode();
+
+    document.addEventListener('mouseleave', () => { if (coffee) coffee.style.opacity = '0'; if (ring) ring.style.opacity = '0'; });
+    document.addEventListener('mouseenter', () => { if (coffee) coffee.style.opacity = '1'; if (ring) ring.style.opacity = '1'; });
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mousemove', onMove2);
+      cancelAnimationFrame(animId);
+    };
+  }, [cursorEnabled]);
+
+  // ── Scroll Reveal ──
+  useEffect(() => {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  });
+
+  // ── Scroll indicator hide ──
+  useEffect(() => {
+    const ind = document.getElementById('scrollIndicator');
+    const onScroll = () => { if (ind) ind.classList.toggle('hidden', window.scrollY > 100); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // ── Toast ──
+  const dismissToast = useCallback((id) => {
+    // Trigger exit animation
+    setToasts(t => t.map(x => x.id === id ? { ...x, exiting: true } : x));
+    // Remove after animation
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 400);
+  }, []);
+
+  const showToast = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    const duration = type === 'success' ? 2000 : 4000;
+    setToasts(t => [...t, { id, message, type, exiting: false, duration }]);
+    setTimeout(() => dismissToast(id), duration);
+  }, [dismissToast]);
+
+  // ── Dashboard click handler ──
+  const handleDashboardClick = () => {
+    if (isLoggedIn) {
+      setShowAdmin(true);
+    } else {
+      setShowLogin(true);
+    }
+  };
+
+  const handleLoginSuccess = (accessToken, refreshToken) => {
+    login(accessToken, refreshToken);
+    setShowLogin(false);
+    setShowAdmin(true);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await apiClient.post('/auth/logout', { refreshToken });
+      }
+    } catch {
+      // silently ignore — luôn logout dù API có fail
+    }
+    logout();
+    setShowAdmin(false);
+    showToast('Đã đăng xuất', 'success');
+  };
+
+  return (
+    <>
+      <StarBackground />
+      {/* Coffee cursor elements */}
+      {cursorEnabled && (
+        <>
+          <div className="cursor-coffee" id="cursorCoffee">☕</div>
+          <div className="cursor-ring" id="cursorRing"></div>
+        </>
+      )}
+
+      {/* Navbar */}
+      <Navbar
+        isLoggedIn={isLoggedIn}
+        onDashboardClick={handleDashboardClick}
+        onCVClick={() => setShowCV(true)}
+        theme={theme}
+        onThemeToggle={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+        cursorEnabled={cursorEnabled}
+        onCursorToggle={() => setCursorEnabled(e => !e)}
+      />
+
+      {/* Main content */}
+      <main>
+        <Hero user={user} />
+        <About user={user} />
+        <Skills />
+        <Projects />
+        <Reviews />
+        <Contact />
+      </main>
+
+      {/* Login Modal */}
+      {showLogin && (
+        <LoginModal onClose={() => setShowLogin(false)} onSuccess={handleLoginSuccess} />
+      )}
+
+      {/* Admin Panel */}
+      {showAdmin && (
+        <AdminPanel onClose={() => setShowAdmin(false)} onLogout={handleLogout} showToast={showToast} onProfileUpdate={fetchUser} />
+      )}
+
+      {/* CV Modal */}
+      {showCV && (
+        <CVModal onClose={() => setShowCV(false)} />
+      )}
+
+      {/* Toast notifications */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}${t.exiting ? ' exiting' : ''}`}>
+            <i className={`bi ${t.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}`} style={{ fontSize: '1.1rem', flexShrink: 0 }}></i>
+            <span style={{ flex: 1 }}>{t.message}</span>
+            <button
+              onClick={() => dismissToast(t.id)}
+              className="toast-close-btn"
+              title="Đóng"
+            >
+              <i className="bi bi-x-lg" />
+            </button>
+            <div className={`toast-progress ${t.type}`} style={{ animationDuration: t.duration ? `${t.duration}ms` : '4000ms' }} />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}

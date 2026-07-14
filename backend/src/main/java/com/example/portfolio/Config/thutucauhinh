@@ -1,0 +1,7 @@
+
+JwtTokenProvider — sign & validate access token
+AuthService — logic login, tạo refresh token, refresh, logout
+LoginAttemptService — rate limit dùng Redis
+JwtAuthFilter — chặn request theo token
+  — khai báo filter chain, route nào public/protected
+AuthController — expose API
