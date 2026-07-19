@@ -32,6 +32,6 @@ public class Review {
     private String content;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 }
