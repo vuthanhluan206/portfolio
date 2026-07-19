@@ -26,9 +26,9 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-    // get all list of review
+    // get all list of review — mới nhất lên đầu
     public List<Review> getAllReviews() {
-        return reviewRepository.findAll();
+        return reviewRepository.findAllByOrderByCreatedAtDesc();
     }
 
     // update a review

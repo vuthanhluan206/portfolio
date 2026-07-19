@@ -242,18 +242,77 @@ function AnalyticsTab({ showToast }) {
 }
 
 /* ─── Tab: Profile ───────────────────────────────────────── */
-function ProfileTab({ showToast, onProfileUpdate, currentAvatar }) {
+
+// Regex kiểm tra độ mạnh mật khẩu
+const PW_RULES = [
+  { id: 'len',     label: 'Ít nhất 8 ký tự',          test: (v) => v.length >= 8 },
+  { id: 'letter',  label: 'Có chữ cái (a-z / A-Z)',   test: (v) => /[a-zA-Z]/.test(v) },
+  { id: 'number',  label: 'Có chữ số (0-9)',           test: (v) => /[0-9]/.test(v) },
+  { id: 'special', label: 'Có ký tự đặc biệt (!@#…)', test: (v) => /[^a-zA-Z0-9]/.test(v) },
+];
+
+function PasswordStrength({ password }) {
+  if (!password) return null;
+  const passed = PW_RULES.filter(r => r.test(password)).length;
+  const colors = ['#ff4444', '#ff9a56', '#fbbf24', '#22c55e'];
+  const labels = ['Rất yếu', 'Yếu', 'Trung bình', 'Mạnh'];
+  const barColor = colors[passed - 1] || '#ff4444';
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      {/* Strength bar */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} style={{
+            flex: 1, height: 4, borderRadius: 4,
+            background: i < passed ? barColor : 'rgba(255,255,255,0.08)',
+            transition: 'background 0.3s',
+          }} />
+        ))}
+      </div>
+      {/* Strength label */}
+      <div style={{ fontSize: '0.72rem', color: barColor, fontFamily: 'var(--font-mono)', marginBottom: 8, fontWeight: 600 }}>
+        {passed > 0 ? labels[passed - 1] : ''}
+      </div>
+      {/* Checklist */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {PW_RULES.map(r => {
+          const ok = r.test(password);
+          return (
+            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.73rem', fontFamily: 'var(--font-mono)', color: ok ? '#22c55e' : 'var(--text-muted)', transition: 'color 0.2s' }}>
+              <i className={`bi ${ok ? 'bi-check-circle-fill' : 'bi-circle'}`} style={{ fontSize: '0.7rem' }} />
+              {r.label}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProfileTab({ showToast, onProfileUpdate, currentAvatar, user }) {
   const [profile, setProfile] = useState({ fullname: '', bio: '', facebook: '', github: '', tiktok: '', instagram: '' });
   const [saving, setSaving] = useState(false);
 
+  // ── Đổi mật khẩu ──
+  const [pwForm, setPwForm] = useState({ newPw: '', confirmPw: '' });
+  const [showNewPw, setShowNewPw]         = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [savingPw, setSavingPw]           = useState(false);
+  const [pwError, setPwError]             = useState('');
+
   useEffect(() => {
-    apiClient.get(`/user?id=${USER_ID}`)
-      .then(res => {
-        const d = res.data;
-        setProfile({ fullname: d.fullname || '', bio: d.bio || '', facebook: d.facebook || '', github: d.github || '', tiktok: d.tiktok || '', instagram: d.instagram || '' });
-      })
-      .catch(() => showToast('Không thể tải thông tin profile', 'error'));
-  }, [showToast]);
+    if (user) {
+      setProfile({
+        fullname: user.fullname || '',
+        bio: user.bio || '',
+        facebook: user.facebook || '',
+        github: user.github || '',
+        tiktok: user.tiktok || '',
+        instagram: user.instagram || ''
+      });
+    }
+  }, [user]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -267,6 +326,38 @@ function ProfileTab({ showToast, onProfileUpdate, currentAvatar }) {
       showToast('Cập nhật thất bại: ' + getErrorMessage(err), 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePw = async (e) => {
+    e.preventDefault();
+    setPwError('');
+
+    // Client-side validation
+    const { newPw, confirmPw } = pwForm;
+    const failed = PW_RULES.filter(r => !r.test(newPw));
+    if (failed.length > 0) {
+      setPwError('Mật khẩu chưa đạt: ' + failed.map(r => r.label.toLowerCase()).join(', '));
+      return;
+    }
+    if (newPw !== confirmPw) {
+      setPwError('Mật khẩu xác nhận không khớp');
+      return;
+    }
+
+    setSavingPw(true);
+    try {
+      await apiClient.put(`/user/update/${USER_ID}`, {
+        username: localStorage.getItem('adminEmail') || '',
+        password: newPw,
+        ...profile,
+      });
+      showToast('Đổi mật khẩu thành công!', 'success');
+      setPwForm({ newPw: '', confirmPw: '' });
+    } catch (err) {
+      setPwError('Đổi mật khẩu thất bại: ' + getErrorMessage(err));
+    } finally {
+      setSavingPw(false);
     }
   };
 
@@ -292,6 +383,7 @@ function ProfileTab({ showToast, onProfileUpdate, currentAvatar }) {
         </div>
       )}
 
+      {/* ── Thông tin cá nhân ── */}
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {fields.map(({ key, label, placeholder, textarea }) => (
           <div key={key} className="admin-field">
@@ -311,17 +403,122 @@ function ProfileTab({ showToast, onProfileUpdate, currentAvatar }) {
           </button>
         </div>
       </form>
+
+      {/* ── Divider ── */}
+      <div style={{ borderTop: '1px solid var(--border)', margin: '24px 0' }} />
+
+      {/* ── Đổi mật khẩu ── */}
+      <div style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+        <i className="bi bi-shield-lock-fill" style={{ marginRight: 6, color: 'var(--accent)' }} />
+        Đổi mật khẩu
+      </div>
+
+      <form onSubmit={handleChangePw} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Mật khẩu mới */}
+        <div className="admin-field">
+          <label className="admin-label">Mật khẩu mới</label>
+          <div style={{ position: 'relative' }}>
+            <input
+              className="admin-input"
+              type={showNewPw ? 'text' : 'password'}
+              placeholder="Nhập mật khẩu mới..."
+              value={pwForm.newPw}
+              onChange={e => { setPwForm({ ...pwForm, newPw: e.target.value }); setPwError(''); }}
+              style={{ paddingRight: 44 }}
+            />
+            <button type="button" onClick={() => setShowNewPw(v => !v)}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+              <i className={`bi ${showNewPw ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`} />
+            </button>
+          </div>
+          {/* Strength indicator */}
+          <PasswordStrength password={pwForm.newPw} />
+        </div>
+
+        {/* Xác nhận mật khẩu */}
+        <div className="admin-field">
+          <label className="admin-label">Xác nhận mật khẩu mới</label>
+          <div style={{ position: 'relative' }}>
+            <input
+              className="admin-input"
+              type={showConfirmPw ? 'text' : 'password'}
+              placeholder="Nhập lại mật khẩu..."
+              value={pwForm.confirmPw}
+              onChange={e => { setPwForm({ ...pwForm, confirmPw: e.target.value }); setPwError(''); }}
+              style={{ paddingRight: 44 }}
+            />
+            <button type="button" onClick={() => setShowConfirmPw(v => !v)}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+              <i className={`bi ${showConfirmPw ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`} />
+            </button>
+          </div>
+          {/* Match indicator */}
+          {pwForm.confirmPw && (
+            <div style={{ marginTop: 6, fontSize: '0.73rem', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 5, color: pwForm.newPw === pwForm.confirmPw ? '#22c55e' : '#f87171' }}>
+              <i className={`bi ${pwForm.newPw === pwForm.confirmPw ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`} />
+              {pwForm.newPw === pwForm.confirmPw ? 'Mật khẩu khớp' : 'Mật khẩu không khớp'}
+            </div>
+          )}
+        </div>
+
+        {pwError && (
+          <div style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: '0.82rem', color: 'var(--accent3)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="bi bi-exclamation-circle-fill" /> {pwError}
+          </div>
+        )}
+
+        <button type="submit" className="admin-btn" disabled={savingPw || !pwForm.newPw || !pwForm.confirmPw}
+          style={{ background: 'linear-gradient(135deg, #6c63ff 0%, #a855f7 100%)' }}>
+          {savingPw
+            ? <><i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite' }} /> Đang đổi...</>
+            : <><i className="bi bi-shield-check" /> Đổi mật khẩu</>
+          }
+        </button>
+      </form>
     </div>
   );
 }
 
 /* ─── Tab: Avatar ────────────────────────────────────────── */
-function AvatarTab({ showToast, onProfileUpdate, currentAvatar, setCurrentAvatar }) {
+function AvatarTab({ showToast, onProfileUpdate, currentAvatar, setCurrentAvatar, user }) {
   const [avatarPreview, setAvatarPreview] = useState(null);
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [avatarFile, setAvatarFile]       = useState(null);
+  const [uploading, setUploading]         = useState(false);
   const fileInputRef = useRef();
 
+  const history = user?.avatarHistory || [];
+  const loadingHistory = !user;
+
+  // ── Chọn avatar từ history (0 tốn R2) ──
+  const handleSelectFromHistory = async (url) => {
+    if (url === currentAvatar) return; // đã dùng rồi
+    setUploading(true);
+    try {
+      await apiClient.post(`/user/avatar/select?id=${USER_ID}`, { url });
+      setCurrentAvatar(url);
+      showToast('Đã đổi avatar!', 'success');
+      if (onProfileUpdate) onProfileUpdate();
+    } catch (err) {
+      showToast('Đổi avatar thất bại: ' + getErrorMessage(err), 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ── Xóa URL khỏi history ──
+  const handleRemoveFromHistory = async (url, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Xóa ảnh này khỏi lịch sử?')) return;
+    try {
+      await apiClient.delete(`/user/avatar/history?id=${USER_ID}`, { data: { url } });
+      showToast('Đã xóa khỏi lịch sử', 'success');
+      if (onProfileUpdate) onProfileUpdate();
+    } catch (err) {
+      showToast('Xóa thất bại: ' + getErrorMessage(err), 'error');
+    }
+  };
+
+  // ── Upload ảnh mới lên R2 ──
   const handleChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -335,13 +532,11 @@ function AvatarTab({ showToast, onProfileUpdate, currentAvatar, setCurrentAvatar
     try {
       const fd = new FormData();
       fd.append('file', avatarFile);
-      // Không set Content-Type thủ công — Axios tự tính boundary của multipart
-      const res = await apiClient.post(`/user/avatar?id=${USER_ID}`, fd, {
+      await apiClient.post(`/user/avatar?id=${USER_ID}`, fd, {
         headers: { 'Content-Type': undefined },
+        timeout: 60000, // Tăng timeout cho upload ảnh
       });
-      const newAvatarUrl = typeof res.data === 'string' ? res.data : res.data?.url || res.data?.avatarUrl || '';
       showToast('Upload avatar thành công!', 'success');
-      setCurrentAvatar(newAvatarUrl);
       setAvatarFile(null);
       setAvatarPreview(null);
       if (onProfileUpdate) onProfileUpdate();
@@ -352,50 +547,75 @@ function AvatarTab({ showToast, onProfileUpdate, currentAvatar, setCurrentAvatar
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa ảnh đại diện này không?")) return;
-    setUploading(true);
-    try {
-      await apiClient.post(`/user/avatar/delete?id=${USER_ID}`);
-      showToast('Đã xóa ảnh đại diện!', 'success');
-      setCurrentAvatar('');
-      setAvatarFile(null);
-      setAvatarPreview(null);
-      if (onProfileUpdate) onProfileUpdate();
-    } catch (err) {
-      showToast('Xóa thất bại: ' + getErrorMessage(err), 'error');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
     <div className="admin-body">
-      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-        Ảnh đại diện hiển thị trên trang chủ. Tối đa 10MB, định dạng JPG/PNG/WEBP.
-      </div>
 
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ảnh hiện tại</div>
-        {currentAvatar ? (
-          <img src={currentAvatar} alt="avatar" className="avatar-preview" style={{ width: 90, height: 90, objectFit: 'cover' }} />
+      {/* ── Gallery lịch sử ── */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <i className="bi bi-images" style={{ marginRight: 6, color: 'var(--accent)' }} />
+            Lịch sử avatar ({history.length})
+          </div>
+          <button onClick={onProfileUpdate} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', cursor: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <i className="bi bi-arrow-clockwise" /> Làm mới
+          </button>
+        </div>
+
+        {loadingHistory ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>
+            <i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite', fontSize: '1.5rem' }} />
+          </div>
+        ) : history.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', border: '1px dashed var(--border)', borderRadius: 12 }}>
+            <i className="bi bi-images" style={{ fontSize: '2rem', display: 'block', marginBottom: 8, opacity: 0.4 }} />
+            Chưa có ảnh nào trong lịch sử.<br />Upload ảnh đầu tiên bên dưới.
+          </div>
         ) : (
-          <div style={{
-            width: 90,
-            height: 90,
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '2px dashed var(--border)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2rem',
-            color: 'var(--text-muted)',
-            margin: '0 auto'
-          }}>
-            👤
+          <div className="avatar-history-grid">
+            {history.map((url) => {
+              const isActive = url === currentAvatar;
+              return (
+                <div
+                  key={url}
+                  className={`avatar-history-item${isActive ? ' active' : ''}`}
+                  onClick={() => handleSelectFromHistory(url)}
+                  title={isActive ? 'Đang sử dụng' : 'Click để dùng ảnh này'}
+                >
+                  <img src={url} alt="avatar" />
+
+                  {/* Badge "Đang dùng" */}
+                  {isActive && (
+                    <div className="avatar-history-badge">
+                      <i className="bi bi-check-circle-fill" /> Đang dùng
+                    </div>
+                  )}
+
+                  {/* Nút xóa khỏi history */}
+                  <button
+                    className="avatar-history-remove"
+                    onClick={(e) => handleRemoveFromHistory(url, e)}
+                    title="Xóa khỏi lịch sử"
+                  >
+                    <i className="bi bi-x" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
+      </div>
+
+      {/* Divider */}
+      <div style={{ borderTop: '1px solid var(--border)', marginBottom: 20 }} />
+
+      {/* ── Upload ảnh mới ── */}
+      <div style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+        <i className="bi bi-cloud-upload" style={{ marginRight: 6, color: 'var(--accent)' }} />
+        Upload ảnh mới
+      </div>
+      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: 10 }}>
+        Ảnh mới sẽ được lưu vào Cloudflare R2 và thêm vào gallery. Tối đa 10MB, JPG/PNG/WEBP.
       </div>
 
       <div className="avatar-upload-zone"
@@ -424,18 +644,14 @@ function AvatarTab({ showToast, onProfileUpdate, currentAvatar, setCurrentAvatar
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 10, width: '100%', marginTop: 8 }}>
-        {avatarFile && (
-          <button className="admin-btn" onClick={handleUpload} disabled={uploading} style={{ flex: 1, margin: 0 }}>
-            {uploading ? <><i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite' }} /> Đang upload...</> : <><i className="bi bi-cloud-upload" /> Upload ảnh</>}
-          </button>
-        )}
-        {currentAvatar && (
-          <button className="admin-btn danger" onClick={handleDelete} disabled={uploading} style={{ flex: 1, margin: 0, background: 'linear-gradient(135deg, #ff6b6b 0%, #ff4444 100%)', border: 'none', color: '#fff' }}>
-            {uploading ? <><i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite' }} /> Đang xử lý...</> : <><i className="bi bi-trash3" /> Xóa ảnh hiện tại</>}
-          </button>
-        )}
-      </div>
+      {avatarFile && (
+        <button className="admin-btn" onClick={handleUpload} disabled={uploading} style={{ width: '100%', marginTop: 10 }}>
+          {uploading
+            ? <><i className="bi bi-arrow-repeat" style={{ animation: 'spin 1s linear infinite' }} /> Đang upload...</>
+            : <><i className="bi bi-cloud-upload" /> Upload ảnh mới</>
+          }
+        </button>
+      )}
     </div>
   );
 }
@@ -645,16 +861,28 @@ const TAB_TITLES = {
 
 export default function AdminPanel({ onClose, onLogout, showToast, onProfileUpdate }) {
   const [activeTab, setActiveTab] = useState('analytics');
+  const [user, setUser] = useState(null);
   const [currentAvatar, setCurrentAvatar] = useState('');
 
-  useEffect(() => {
-    apiClient.get(`/user?id=${USER_ID}`)
-      .then(r => setCurrentAvatar(r.data?.avatar || ''))
-      .catch(() => {});
-    showToast('Đã mở Admin Dashboard!', 'success');
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await apiClient.get(`/user?id=${USER_ID}`);
+      setUser(res.data);
+      setCurrentAvatar(res.data?.avatar || '');
+    } catch {
+      showToast('Không thể tải thông tin admin', 'error');
+    }
   }, [showToast]);
 
+  useEffect(() => {
+    fetchUser();
+    showToast('Đã mở Admin Dashboard!', 'success');
+  }, [fetchUser, showToast]);
 
+  const handleProfileUpdate = () => {
+    fetchUser();
+    if (onProfileUpdate) onProfileUpdate();
+  };
 
   return (
     <>
@@ -710,8 +938,8 @@ export default function AdminPanel({ onClose, onLogout, showToast, onProfileUpda
 
           <div className="admin-workspace-body">
             {activeTab === 'analytics' && <AnalyticsTab showToast={showToast} />}
-            {activeTab === 'profile'   && <ProfileTab showToast={showToast} onProfileUpdate={onProfileUpdate} currentAvatar={currentAvatar} />}
-            {activeTab === 'avatar'    && <AvatarTab showToast={showToast} onProfileUpdate={onProfileUpdate} currentAvatar={currentAvatar} setCurrentAvatar={setCurrentAvatar} />}
+            {activeTab === 'profile'   && <ProfileTab showToast={showToast} onProfileUpdate={handleProfileUpdate} currentAvatar={currentAvatar} user={user} />}
+            {activeTab === 'avatar'    && <AvatarTab showToast={showToast} onProfileUpdate={handleProfileUpdate} currentAvatar={currentAvatar} setCurrentAvatar={setCurrentAvatar} user={user} />}
             {activeTab === 'projects'  && <ProjectsTab showToast={showToast} />}
             {activeTab === 'reviews'   && <ReviewsTab showToast={showToast} />}
           </div>

@@ -49,8 +49,9 @@ export default function Hero({ user }) {
     };
     resize();
 
-    const PARTICLE_COUNT = 70;
-    const CONNECT_DIST = 120;
+    const isMobile = window.innerWidth < 768;
+    const PARTICLE_COUNT = isMobile ? 15 : 70;
+    const CONNECT_DIST = isMobile ? 80 : 120;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       particles.push({

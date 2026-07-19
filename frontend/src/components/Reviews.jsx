@@ -18,7 +18,7 @@ export default function Reviews() {
   const [editError, setEditError]     = useState('');
   const [editMsg, setEditMsg]         = useState('');
 
-  const [form, setForm]           = useState({ name: '', role: '', email: '', rating: 0, comment: '' });
+  const [form, setForm]           = useState({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg]   = useState('');
 
@@ -46,6 +46,18 @@ export default function Reviews() {
   /* ── Thêm mới ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Honeypot anti-spam check (bots will auto-fill this invisible field)
+    if (form.website) {
+      setSubmitMsg('Cảm ơn bạn đã gửi nhận xét! 🎉');
+      setTimeout(() => {
+        setShowAddModal(false);
+        setSubmitMsg('');
+        setForm({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
+      }, 1500);
+      return;
+    }
+
     if (!form.rating) { setSubmitMsg('Vui lòng chọn số sao'); return; }
     setSubmitting(true);
     try {
@@ -58,7 +70,7 @@ export default function Reviews() {
       setTimeout(() => {
         setShowAddModal(false);
         setSubmitMsg('');
-        setForm({ name: '', role: '', email: '', rating: 0, comment: '' });
+        setForm({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
       }, 1500);
     } catch (err) {
       setSubmitMsg(err.response?.data?.message || 'Gửi thất bại. Vui lòng thử lại.');
@@ -198,6 +210,17 @@ export default function Reviews() {
               Thêm nhận xét
             </h6>
             <form onSubmit={handleSubmit}>
+              {/* Honeypot anti-spam field */}
+              <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} aria-hidden="true">
+                <input
+                  type="text"
+                  name="website"
+                  value={form.website}
+                  onChange={e => setForm({...form, website: e.target.value})}
+                  tabIndex="-1"
+                  autoComplete="off"
+                />
+              </div>
               <div className="mb-3">
                 <label className="rev-label">Tên của bạn *</label>
                 <input className="rev-input" type="text" placeholder="Nguyen Van A" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />

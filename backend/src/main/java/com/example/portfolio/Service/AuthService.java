@@ -25,7 +25,7 @@ public class AuthService {
 
     private static final long REFRESH_TOKEN_VALID_DAYS = 7;
 
-    public AuthResponse Login(String username, String password) {
+    public AuthResponse login(String username, String password) {
         // kiểm tra user có tồn tại không
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("sai tên đăng nhập hoặc mật khẩu"));
@@ -36,13 +36,13 @@ public class AuthService {
         // tạo access token thông qua user name
         String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername());
         // tạo refresh token
-        String refreshTokemValue = UUID.randomUUID().toString();
+        String refreshTokenValue = UUID.randomUUID().toString();
 
-        RefreshToken refreshToken = RefreshToken.builder().token(refreshTokemValue).user(user)
+        RefreshToken refreshToken = RefreshToken.builder().token(refreshTokenValue).user(user)
                 .expiryDate(LocalDateTime.now().plusDays(REFRESH_TOKEN_VALID_DAYS)).build();
         refreshTokenRepository.save(refreshToken);
-        // trả về refreshtone và acess token
-        return new AuthResponse(accessToken, refreshTokemValue);
+        // trả về refreshToken và access token
+        return new AuthResponse(accessToken, refreshTokenValue);
     }
 
     // cấp access token mới

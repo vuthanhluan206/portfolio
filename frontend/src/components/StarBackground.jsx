@@ -21,8 +21,9 @@ export default function StarBackground() {
     resize();
     window.addEventListener('resize', resize);
 
-    // Initialize 160 stars
-    const STAR_COUNT = 160;
+    // Initialize stars (fewer on mobile for better scroll performance)
+    const isMobile = window.innerWidth < 768;
+    const STAR_COUNT = isMobile ? 60 : 160;
     for (let i = 0; i < STAR_COUNT; i++) {
       stars.push({
         x: Math.random() * 1920,

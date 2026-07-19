@@ -37,22 +37,22 @@ public class User {
     @jakarta.persistence.Column(columnDefinition = "TEXT")
     private String bio;
 
-    @NotBlank(message = "Phone cannot be blank")
     private String facebook;
 
-    @NotBlank(message = "GitHub cannot be blank")
     private String github;
 
-    @NotBlank(message = "TikTok cannot be blank")
     private String tiktok;
 
-    @NotBlank(message = "Instagram cannot be blank")
     private String instagram;
 
     @NotBlank(message = "Fullname cannot be blank")
     private String fullname;
 
     private String avatar;
+
+    // Lưu danh sách URL avatar đã upload, phân cách bởi "|"
+    @jakarta.persistence.Column(columnDefinition = "TEXT")
+    private String avatarHistory;
 
     @OneToMany(mappedBy = "user")
     private List<RefreshToken> refreshTokens;

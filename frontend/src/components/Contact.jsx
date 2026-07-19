@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "7bd1c0d1-9b78-47e0-b2fd-342cd2bb0036";
+const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '';
 
 export default function Contact() {
   const [formData, setFormData] = useState({

@@ -35,7 +35,7 @@ public class ReviewController {
         return ResponseEntity.ok(this.reviewService.getAllReviews());
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ResponseEntity<?> updateReview(@RequestBody Review review) {
         Review updatedReview = this.reviewService.updateReview(review);
         return ResponseEntity.ok(updatedReview);

@@ -1,5 +1,7 @@
 package com.example.portfolio.dto;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,4 +22,6 @@ public class UserResponseDTO {
     private String fullname;
 
     private String avatar;
+
+    private List<String> avatarHistory;
 }

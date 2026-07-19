@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import './index.css';
 
 import Navbar from './components/Navbar';
@@ -8,20 +9,18 @@ import Skills from './components/Skills';
 import Projects from './components/Projects';
 import Reviews from './components/Reviews';
 import Contact from './components/Contact';
-import LoginModal from './components/LoginModal';
-import AdminPanel from './components/AdminPanel';
 import CVModal from './components/CVModal';
 import { useAuth } from './hooks/useAuth';
 import apiClient from './api/apiClient';
 import StarBackground from './components/StarBackground';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
 
 
-export default function App() {
-  const { isLoggedIn, login, logout } = useAuth();
+function PortfolioHome({ isLoggedIn }) {
+  const navigate = useNavigate();
   const [theme, setTheme] = useState('dark');
   const [cursorEnabled, setCursorEnabled] = useState(true);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
   const [showCV, setShowCV] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [user, setUser] = useState(() => {
@@ -48,22 +47,13 @@ export default function App() {
   }, [fetchUser]);
 
   // ── Ghi nhận lượt truy cập của khách (không phải admin) ──
-  // Chỉ đếm 1 lần mỗi phiên trình duyệt (sessionStorage)
-  // Không đếm nếu đang đăng nhập (admin)
   useEffect(() => {
-    if (isLoggedIn) return;                                 // admin đăng nhập -> bỏ qua
-    if (sessionStorage.getItem('visit_counted')) return;   // đã đếm trong phiên này
+    if (isLoggedIn) return;
+    if (sessionStorage.getItem('visit_counted')) return;
     const today = new Date().toISOString().split('T')[0];
     apiClient.post(`/daily-visit-stat/increment?date=${today}`)
       .then(() => sessionStorage.setItem('visit_counted', '1'))
-      .catch(() => {}); // silently ignore errors
-  }, [isLoggedIn]);
-
-  // Close Admin Panel immediately if logged out (e.g. token expired)
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setShowAdmin(false);
-    }
+      .catch(() => {});
   }, [isLoggedIn]);
 
   // ── Theme ──
@@ -88,7 +78,6 @@ export default function App() {
 
     const onMove = (e) => {
       if (coffee) { coffee.style.left = e.clientX + 'px'; coffee.style.top = e.clientY + 'px'; }
-      // Steam
       const now = Date.now();
       if (now - steamCooldown > 180) {
         steamCooldown = now;
@@ -105,8 +94,6 @@ export default function App() {
     };
 
     const animRing = () => {
-      // ring follows with lag — but we need mouseX/Y from somewhere
-      // Store in window
       ringX += ((window._mx || 0) - ringX) * 0.1;
       ringY += ((window._my || 0) - ringY) * 0.1;
       if (ring) { ring.style.left = ringX + 'px'; ring.style.top = ringY + 'px'; }
@@ -119,7 +106,6 @@ export default function App() {
     window.addEventListener('mousemove', onMove2, { passive: true });
     animRing();
 
-    // Code mode on interactive elements
     const addCodeMode = () => {
       document.querySelectorAll('a, button, .project-card, .contact-btn, .nav-link').forEach(el => {
         el.addEventListener('mouseenter', () => { coffee?.classList.add('code-mode'); ring?.classList.add('code-mode'); });
@@ -157,9 +143,7 @@ export default function App() {
 
   // ── Toast ──
   const dismissToast = useCallback((id) => {
-    // Trigger exit animation
     setToasts(t => t.map(x => x.id === id ? { ...x, exiting: true } : x));
-    // Remove after animation
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 400);
   }, []);
 
@@ -170,33 +154,13 @@ export default function App() {
     setTimeout(() => dismissToast(id), duration);
   }, [dismissToast]);
 
-  // ── Dashboard click handler ──
+  // ── Dashboard click → navigate ──
   const handleDashboardClick = () => {
     if (isLoggedIn) {
-      setShowAdmin(true);
+      navigate('/dashboard');
     } else {
-      setShowLogin(true);
+      navigate('/login');
     }
-  };
-
-  const handleLoginSuccess = (accessToken, refreshToken) => {
-    login(accessToken, refreshToken);
-    setShowLogin(false);
-    setShowAdmin(true);
-  };
-
-  const handleLogout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        await apiClient.post('/auth/logout', { refreshToken });
-      }
-    } catch {
-      // silently ignore — luôn logout dù API có fail
-    }
-    logout();
-    setShowAdmin(false);
-    showToast('Đã đăng xuất', 'success');
   };
 
   return (
@@ -231,16 +195,6 @@ export default function App() {
         <Contact />
       </main>
 
-      {/* Login Modal */}
-      {showLogin && (
-        <LoginModal onClose={() => setShowLogin(false)} onSuccess={handleLoginSuccess} />
-      )}
-
-      {/* Admin Panel */}
-      {showAdmin && (
-        <AdminPanel onClose={() => setShowAdmin(false)} onLogout={handleLogout} showToast={showToast} onProfileUpdate={fetchUser} />
-      )}
-
       {/* CV Modal */}
       {showCV && (
         <CVModal onClose={() => setShowCV(false)} />
@@ -264,5 +218,20 @@ export default function App() {
         ))}
       </div>
     </>
+  );
+}
+
+
+export default function App() {
+  const { isLoggedIn } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/" element={<PortfolioHome isLoggedIn={isLoggedIn} />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      {/* Fallback */}
+      <Route path="*" element={<PortfolioHome isLoggedIn={isLoggedIn} />} />
+    </Routes>
   );
 }
