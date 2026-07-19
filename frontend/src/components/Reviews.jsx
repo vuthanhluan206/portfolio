@@ -21,9 +21,13 @@ export default function Reviews() {
   const [form, setForm]           = useState({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg]   = useState('');
+  const [loadError, setLoadError]   = useState(false);
 
   const loadReviews = () => {
-    apiClient.get('/review').then(res => setReviews(Array.isArray(res.data) ? res.data : [])).catch(() => {});
+    setLoadError(false);
+    apiClient.get('/review')
+      .then(res => setReviews(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setLoadError(true));
   };
 
   useEffect(() => { loadReviews(); }, []);
@@ -153,6 +157,20 @@ export default function Reviews() {
 
         {/* Marquee */}
         <div className="reviews-marquee-container overflow-hidden position-relative mb-5 reveal">
+          {loadError ? (
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}>
+              <i className="bi bi-wifi-off" style={{ fontSize: '2rem', display: 'block', marginBottom: 10, color: 'var(--accent3)' }} />
+              Không thể tải reviews. Vui lòng kiểm tra kết nối server.
+              <button onClick={loadReviews} style={{ display: 'block', margin: '12px auto 0', background: 'none', border: '1px solid var(--border)', color: 'var(--accent)', borderRadius: 8, padding: '6px 16px', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>
+                <i className="bi bi-arrow-clockwise" /> Thử lại
+              </button>
+            </div>
+          ) : reviews.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem' }}>
+              <i className="bi bi-chat-square-dots" style={{ fontSize: '2rem', display: 'block', marginBottom: 10, color: 'var(--accent)', opacity: 0.5 }} />
+              Chưa có nhận xét nào. Hãy là người đầu tiên!
+            </div>
+          ) : (
           <div className="marquee-track" id="reviewMarqueeTrack">
             {marqueeReviews.map((r, idx) => (
               <div key={`${r.id}-${idx}`} className="review-card-wrapper">
@@ -191,6 +209,7 @@ export default function Reviews() {
               </div>
             ))}
           </div>
+          )} {/* end ternary */}
         </div>
 
         {/* Add review button */}

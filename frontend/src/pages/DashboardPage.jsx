@@ -17,6 +17,22 @@ export default function DashboardPage() {
     }
   }, [isLoggedIn, navigate]);
 
+  // Reset cursor về bình thường khi vào Dashboard (không có coffee cursor)
+  useEffect(() => {
+    document.body.style.cursor = 'auto';
+    document.documentElement.style.cursor = 'auto';
+    // Override CSS cursor: none trên toàn trang
+    const style = document.createElement('style');
+    style.id = 'dashboard-cursor-override';
+    style.textContent = 'body, body * { cursor: auto !important; } body a, body button { cursor: pointer !important; }';
+    document.head.appendChild(style);
+    return () => {
+      document.body.style.cursor = '';
+      document.documentElement.style.cursor = '';
+      document.getElementById('dashboard-cursor-override')?.remove();
+    };
+  }, []);
+
   // ── Toast ──
   const dismissToast = useCallback((id) => {
     setToasts(t => t.map(x => x.id === id ? { ...x, exiting: true } : x));

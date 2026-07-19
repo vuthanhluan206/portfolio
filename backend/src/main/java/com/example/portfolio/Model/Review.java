@@ -22,7 +22,6 @@ public class Review {
     @NotBlank(message = "Name cannot be blank")
     private String name;
 
-    @NotBlank(message = "Role cannot be blank")
     private String role;
 
     @NotNull(message = "Star cannot be blank")
