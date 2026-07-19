@@ -65,6 +65,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         auth -> auth
+                                // Cho phép các request tiền kiểm tra OPTIONS của trình duyệt
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                // Cho phép truy cập trang báo lỗi để tránh lỗi CORS khi có sự cố hệ thống
+                                .requestMatchers("/error").permitAll()
                                 .requestMatchers("/api/auth/**").permitAll()
                                 // Public: user tự xóa review của mình bằng email xác nhận
                                 .requestMatchers("/api/review/delete-by-email").permitAll()
