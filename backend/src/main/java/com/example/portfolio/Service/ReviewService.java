@@ -42,14 +42,13 @@ public class ReviewService {
 
         existing.setEmail(review.getEmail());
         existing.setName(review.getName());
-        existing.setRole(review.getRole());
         existing.setStar(review.getStar());
         existing.setContent(review.getContent());
         return reviewRepository.save(existing);
     }
 
     // Public — user tự sửa review của mình bằng email xác nhận
-    public Review updateByEmail(Long id, String email, String name, String role, Long star, String content) {
+    public Review updateByEmail(Long id, String email, String name, Long star, String content) {
         Review existing = reviewRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Review does not exist for this id"));
         if (!existing.getEmail().equalsIgnoreCase(email.trim())) {
@@ -59,7 +58,6 @@ public class ReviewService {
             throw new IllegalArgumentException("Số sao phải từ 1 đến 5");
         }
         existing.setName(name);
-        existing.setRole(role);
         existing.setStar(star);
         existing.setContent(content);
         return reviewRepository.save(existing);

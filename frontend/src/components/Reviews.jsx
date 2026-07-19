@@ -13,12 +13,12 @@ export default function Reviews() {
   const [deleteError, setDeleteError]   = useState('');
 
   const [editTarget, setEditTarget]   = useState(null);
-  const [editForm, setEditForm]       = useState({ email: '', name: '', role: '', rating: 0, comment: '' });
+  const [editForm, setEditForm]       = useState({ email: '', name: '', rating: 0, comment: '' });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError]     = useState('');
   const [editMsg, setEditMsg]         = useState('');
 
-  const [form, setForm]           = useState({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
+  const [form, setForm]           = useState({ name: '', email: '', rating: 0, comment: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg]   = useState('');
   const [loadError, setLoadError]   = useState(false);
@@ -57,7 +57,7 @@ export default function Reviews() {
       setTimeout(() => {
         setShowAddModal(false);
         setSubmitMsg('');
-        setForm({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
+        setForm({ name: '', email: '', rating: 0, comment: '', website: '' });
       }, 1500);
       return;
     }
@@ -66,7 +66,7 @@ export default function Reviews() {
     setSubmitting(true);
     try {
       await apiClient.post('/review/create', {
-        name: form.name, role: form.role, email: form.email,
+        name: form.name, email: form.email,
         star: form.rating, content: form.comment
       });
       setSubmitMsg('Cảm ơn bạn đã gửi nhận xét! 🎉');
@@ -74,7 +74,7 @@ export default function Reviews() {
       setTimeout(() => {
         setShowAddModal(false);
         setSubmitMsg('');
-        setForm({ name: '', role: '', email: '', rating: 0, comment: '', website: '' });
+        setForm({ name: '', email: '', rating: 0, comment: '', website: '' });
       }, 1500);
     } catch (err) {
       setSubmitMsg(err.response?.data?.message || 'Gửi thất bại. Vui lòng thử lại.');
@@ -101,7 +101,7 @@ export default function Reviews() {
   /* ── Mở modal sửa ── */
   const openEditModal = (r) => {
     setEditTarget(r);
-    setEditForm({ email: '', name: r.name, role: r.role, rating: r.star, comment: r.content });
+    setEditForm({ email: '', name: r.name, rating: r.star, comment: r.content });
     setEditError(''); setEditMsg('');
     setShowEditModal(true);
   };
@@ -117,7 +117,6 @@ export default function Reviews() {
         id:      editTarget.id,
         email:   editForm.email,
         name:    editForm.name,
-        role:    editForm.role,
         star:    editForm.rating,
         content: editForm.comment,
       });
@@ -182,7 +181,6 @@ export default function Reviews() {
                     <div className="review-avatar">{getInitials(r.name)}</div>
                     <div>
                       <div className="review-name">{r.name}</div>
-                      <div className="review-meta">{r.role}</div>
                     </div>
                   </div>
 
@@ -243,10 +241,6 @@ export default function Reviews() {
               <div className="mb-3">
                 <label className="rev-label">Tên của bạn *</label>
                 <input className="rev-input" type="text" placeholder="Nguyen Van A" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
-              </div>
-              <div className="mb-3">
-                <label className="rev-label">Vai trò / Quan hệ</label>
-                <input className="rev-input" type="text" placeholder="vd: Classmate, Mentor, Teammate" value={form.role} onChange={e => setForm({...form, role: e.target.value})} />
               </div>
               <div className="mb-3">
                 <label className="rev-label">Email * (dùng để xác nhận khi sửa / xóa sau)</label>
@@ -318,15 +312,6 @@ export default function Reviews() {
                 type="text"
                 value={editForm.name}
                 onChange={e => setEditForm({...editForm, name: e.target.value})}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="rev-label">Vai trò / Quan hệ</label>
-              <input
-                className="rev-input"
-                type="text"
-                value={editForm.role}
-                onChange={e => setEditForm({...editForm, role: e.target.value})}
               />
             </div>
             <div className="mb-3">

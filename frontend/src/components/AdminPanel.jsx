@@ -696,7 +696,7 @@ function ReviewsTab({ showToast }) {
           <div key={r.id} className="admin-review-item">
             <div className="admin-review-info">
               <div className="admin-review-name">{r.name}</div>
-              <div className="admin-review-role">{r.role} · {r.email}</div>
+              <div className="admin-review-role">{r.email}</div>
               <div style={{ display: 'flex', gap: 2, margin: '4px 0' }}>{stars(r.star)}</div>
               <div className="admin-review-text">{r.content}</div>
             </div>

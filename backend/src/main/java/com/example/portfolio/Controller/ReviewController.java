@@ -47,11 +47,10 @@ public class ReviewController {
             @RequestParam Long id,
             @RequestParam String email,
             @RequestParam String name,
-            @RequestParam String role,
             @RequestParam Long star,
             @RequestParam String content) {
         try {
-            Review updated = this.reviewService.updateByEmail(id, email, name, role, star, content);
+            Review updated = this.reviewService.updateByEmail(id, email, name, star, content);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
