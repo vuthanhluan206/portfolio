@@ -681,7 +681,7 @@ function ReviewsTab({ showToast }) {
     <div className="admin-body">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{reviews.length} reviews</div>
-        <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', cursor: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button onClick={load} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           <i className="bi bi-arrow-clockwise" /> Làm mới
         </button>
       </div>
