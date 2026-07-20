@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.portfolio.Config.JwtTokenProvider;
 import com.example.portfolio.Model.RefreshToken;
 import com.example.portfolio.Model.User;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
