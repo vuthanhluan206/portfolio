@@ -28,6 +28,10 @@ public class Review {
     @NotBlank(message = "Content cannot be blank")
     private String content;
 
+    // Mối quan hệ với chủ portfolio (VD: "Classmate", "Mentor", "Colleague"...)
+    @Column(columnDefinition = "VARCHAR(100) DEFAULT ''")
+    private String role = "";
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

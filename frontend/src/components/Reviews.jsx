@@ -18,7 +18,7 @@ export default function Reviews() {
   const [editError, setEditError]     = useState('');
   const [editMsg, setEditMsg]         = useState('');
 
-  const [form, setForm]           = useState({ name: '', email: '', rating: 0, comment: '', website: '' });
+  const [form, setForm]           = useState({ name: '', email: '', rating: 0, comment: '', role: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg]   = useState('');
   const [loadError, setLoadError]   = useState(false);
@@ -57,7 +57,7 @@ export default function Reviews() {
       setTimeout(() => {
         setShowAddModal(false);
         setSubmitMsg('');
-        setForm({ name: '', email: '', rating: 0, comment: '', website: '' });
+        setForm({ name: '', email: '', rating: 0, comment: '', role: '', website: '' });
       }, 1500);
       return;
     }
@@ -67,14 +67,15 @@ export default function Reviews() {
     try {
       await apiClient.post('/review/create', {
         name: form.name, email: form.email,
-        star: form.rating, content: form.comment
+        star: form.rating, content: form.comment,
+        role: form.role
       });
       setSubmitMsg('Cảm ơn bạn đã gửi nhận xét! 🎉');
       loadReviews();
       setTimeout(() => {
         setShowAddModal(false);
         setSubmitMsg('');
-        setForm({ name: '', email: '', rating: 0, comment: '', website: '' });
+        setForm({ name: '', email: '', rating: 0, comment: '', role: '', website: '' });
       }, 1500);
     } catch (err) {
       setSubmitMsg(err.response?.data?.message || 'Gửi thất bại. Vui lòng thử lại.');
@@ -181,6 +182,7 @@ export default function Reviews() {
                     <div className="review-avatar">{getInitials(r.name)}</div>
                     <div>
                       <div className="review-name">{r.name}</div>
+                      {r.role && <div className="review-role">{r.role}</div>}
                     </div>
                   </div>
 
@@ -245,6 +247,24 @@ export default function Reviews() {
               <div className="mb-3">
                 <label className="rev-label">Email * (dùng để xác nhận khi sửa / xóa sau)</label>
                 <input className="rev-input" type="email" placeholder="you@gmail.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+              </div>
+              <div className="mb-3">
+                <label className="rev-label">Mối quan hệ với tôi</label>
+                <select
+                  className="rev-input"
+                  value={form.role}
+                  onChange={e => setForm({...form, role: e.target.value})}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="">-- Chọn mối quan hệ --</option>
+                  <option value="Classmate">🎓 Classmate (Bạn cùng lớp)</option>
+                  <option value="Teammate">🤝 Teammate (Đồng đội dự án)</option>
+                  <option value="Mentor">🧑‍🏫 Mentor (Người hướng dẫn)</option>
+                  <option value="Colleague">💼 Colleague (Đồng nghiệp)</option>
+                  <option value="Instructor">📚 Instructor (Giảng viên)</option>
+                  <option value="Friend">😊 Friend (Bạn bè)</option>
+                  <option value="Other">✨ Other (Khác)</option>
+                </select>
               </div>
               <div className="mb-3">
                 <label className="rev-label">Đánh giá sao</label>

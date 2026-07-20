@@ -906,6 +906,7 @@ body::after {
 .review-author { display: flex; align-items: center; gap: 12px; }
 .review-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,217,255,0.2)); border: 1px solid var(--border-hover); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; color: var(--accent2); flex-shrink: 0; }
 .review-name { font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+.review-role { font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); margin-top: 2px; opacity: 0.85; }
 .review-meta { font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); }
 .review-stars { display: flex; gap: 3px; margin-bottom: 16px; }
 .review-stars i { color: rgba(108,99,255,0.2); font-size: 0.85rem; }
