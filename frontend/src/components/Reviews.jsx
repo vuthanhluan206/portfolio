@@ -249,22 +249,14 @@ export default function Reviews() {
                 <input className="rev-input" type="email" placeholder="you@gmail.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
               </div>
               <div className="mb-3">
-                <label className="rev-label">Mối quan hệ với tôi</label>
-                <select
+                <label className="rev-label">Mối quan hệ với tôi (không bắt buộc)</label>
+                <input
                   className="rev-input"
+                  type="text"
+                  placeholder="VD: Classmate, Mentor, Đồng đội..."
                   value={form.role}
                   onChange={e => setForm({...form, role: e.target.value})}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <option value="">-- Chọn mối quan hệ --</option>
-                  <option value="Classmate">🎓 Classmate (Bạn cùng lớp)</option>
-                  <option value="Teammate">🤝 Teammate (Đồng đội dự án)</option>
-                  <option value="Mentor">🧑‍🏫 Mentor (Người hướng dẫn)</option>
-                  <option value="Colleague">💼 Colleague (Đồng nghiệp)</option>
-                  <option value="Instructor">📚 Instructor (Giảng viên)</option>
-                  <option value="Friend">😊 Friend (Bạn bè)</option>
-                  <option value="Other">✨ Other (Khác)</option>
-                </select>
+                />
               </div>
               <div className="mb-3">
                 <label className="rev-label">Đánh giá sao</label>
