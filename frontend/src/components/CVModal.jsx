@@ -5,8 +5,9 @@ const CV = {
   name: 'Vũ Thành Luân',
   title: 'Intern Java Backend',
   contacts: [
-    { icon: '📞', label: '0388 891 293',              href: 'tel:0388891293' },
     { icon: '✉️', label: 'vuthanhluan4326@gmail.com', href: 'mailto:vuthanhluan4326@gmail.com' },
+    { icon: '📞', label: '0388 891 293',              href: 'tel:0388891293' },
+    { icon: '💻', label: 'github.com/vuthanhluan206',  href: 'https://github.com/vuthanhluan206' },
     { icon: '🌐', label: 'vuthanhluan.bond',           href: 'https://vuthanhluan.bond' },
     { icon: '📍', label: 'Phú Diễn, Hà Nội',          href: null },
   ],
@@ -143,20 +144,29 @@ function CVDocument() {
             {CV.title}
           </span>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px 22px' }}>
-          {CV.contacts.map((c) =>
-            c.href ? (
-              <a key={c.label} href={c.href}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.73rem', fontWeight: 500, color: '#45464d', textDecoration: 'none' }}>
-                <span style={{ fontSize: '0.78rem' }}>{c.icon}</span>{c.label}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', marginTop: 2 }}>
+          {CV.contacts.map((c) => {
+            const pillStyle = {
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '4px 12px', borderRadius: 99,
+              background: 'rgba(0,88,190,0.06)',
+              border: '1px solid rgba(0,88,190,0.14)',
+              fontSize: '0.71rem', fontWeight: 600,
+              color: '#334155', textDecoration: 'none',
+              transition: 'background 0.15s',
+            };
+            return c.href ? (
+              <a key={c.label} href={c.href} style={pillStyle}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,88,190,0.13)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,88,190,0.06)'}>
+                <span style={{ fontSize: '0.8rem' }}>{c.icon}</span>{c.label}
               </a>
             ) : (
-              <span key={c.label}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.73rem', fontWeight: 500, color: '#45464d' }}>
-                <span style={{ fontSize: '0.78rem' }}>{c.icon}</span>{c.label}
+              <span key={c.label} style={pillStyle}>
+                <span style={{ fontSize: '0.8rem' }}>{c.icon}</span>{c.label}
               </span>
-            )
-          )}
+            );
+          })}
         </div>
       </header>
 
@@ -426,11 +436,11 @@ export default function CVModal({ onClose }) {
         <div style="display:inline-block;padding:2px 11px;background:rgba(0,88,190,.08);border-radius:99px;margin-bottom:8px">
           <span style="font-size:0.7rem;font-weight:700;color:#0058be;letter-spacing:.02em">${d.title}</span>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px 16px">
+        <div style="display:flex;flex-wrap:wrap;gap:4px 8px">
           ${d.contacts.map(c => c.href
-            ? `<a href="${c.href}" style="display:flex;align-items:center;gap:3px;font-size:0.66rem;font-weight:500;color:#45464d;text-decoration:none">
+            ? `<a href="${c.href}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:rgba(0,88,190,0.06);border:1px solid rgba(0,88,190,0.14);font-size:0.63rem;font-weight:600;color:#334155;text-decoration:none">
                  <span>${c.icon}</span>${c.label}</a>`
-            : `<span style="display:flex;align-items:center;gap:3px;font-size:0.66rem;font-weight:500;color:#45464d">
+            : `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:rgba(0,88,190,0.06);border:1px solid rgba(0,88,190,0.14);font-size:0.63rem;font-weight:600;color:#334155">
                  <span>${c.icon}</span>${c.label}</span>`).join('')}
         </div>
       </header>
