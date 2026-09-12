@@ -427,6 +427,41 @@ h6 {
   font-size: 1.05rem;
 }
 
+.about-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.social-links a {
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.social-links a:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.social-links i {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
 .traits {
   display: grid;
   gap: 12px;
@@ -696,19 +731,6 @@ h6 {
   align-items: center;
   justify-content: flex-end;
   gap: 20px;
-}
-
-.footer-socials a {
-  display: grid;
-  place-items: center;
-  color: var(--text);
-  text-decoration: none;
-  transition: color 0.25s ease, transform 0.25s ease;
-}
-
-.footer-socials a:hover {
-  color: var(--accent);
-  transform: translateY(-2px);
 }
 
 .footer-socials span {

@@ -1,4 +1,5 @@
 import { portfolio } from '../data/portfolioConfig';
+import SocialLinks from './SocialLinks';
 
 export default function About() {
   return (
@@ -8,7 +9,10 @@ export default function About() {
           <p className="eyebrow">GET TO KNOW ME</p>
           <h2>About Me</h2>
           <p className="about-copy">{portfolio.about}</p>
-          <a className="btn btn-outline" href="#contact">Let's Talk</a>
+          <div className="about-actions">
+            <a className="btn btn-outline" href="#contact">Let's Talk</a>
+            <SocialLinks />
+          </div>
         </div>
         <div className="traits">
           <span>CURIOUS</span>
