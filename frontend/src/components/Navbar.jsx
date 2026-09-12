@@ -4,24 +4,39 @@ import LogoMark from './LogoMark';
 
 const LINKS = ['Home', 'About', 'Skills', 'Projects', 'Contact'];
 
-export default function Navbar() {
+export default function Navbar({ currentView = 'home', onHomeClick, onCvClick }) {
   const [active, setActive] = useState('home');
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const sections = LINKS.map(label => document.getElementById(label.toLowerCase())).filter(Boolean);
-    const observer = new IntersectionObserver(
-      entries => entries.forEach(entry => entry.isIntersecting && setActive(entry.target.id)),
-      { rootMargin: '-35% 0px -55% 0px' },
-    );
-    sections.forEach(section => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
+    if (currentView !== 'home') return undefined;
+    let frameId = 0;
+
+    const setActiveFromScroll = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        const sections = LINKS.map(label => document.getElementById(label.toLowerCase())).filter(Boolean);
+        const current = sections.findLast(section => section.getBoundingClientRect().top <= 120);
+        const atPageEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+        const nextActive = atPageEnd ? 'contact' : current?.id ?? 'home';
+        setActive(previous => (previous === nextActive ? previous : nextActive));
+      });
+    };
+
+    setActiveFromScroll();
+    window.addEventListener('scroll', setActiveFromScroll, { passive: true });
+    window.addEventListener('resize', setActiveFromScroll);
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('scroll', setActiveFromScroll);
+      window.removeEventListener('resize', setActiveFromScroll);
+    };
+  }, [currentView]);
 
   return (
     <header className="site-header">
       <nav className="site-nav" aria-label="Primary navigation">
-        <a className="site-logo" href="#home" aria-label="Go to home">
+        <a className="site-logo" href="#home" aria-label="Go to home" onClick={onHomeClick}>
           <LogoMark />
         </a>
         <button className="menu-toggle" type="button" onClick={() => setOpen(!open)} aria-label="Toggle menu">
@@ -30,14 +45,30 @@ export default function Navbar() {
         <div className={`site-menu ${open ? 'is-open' : ''}`}>
           {LINKS.map(label => (
             <a
-              className={active === label.toLowerCase() ? 'active' : ''}
+              className={currentView === 'home' && active === label.toLowerCase() ? 'active' : ''}
               key={label}
               href={`#${label.toLowerCase()}`}
-              onClick={() => setOpen(false)}
+              onClick={(event) => {
+                const sectionId = label.toLowerCase();
+                event.preventDefault();
+                onHomeClick?.();
+                setOpen(false);
+                setTimeout(() => document.getElementById(sectionId)?.scrollIntoView(), 0);
+              }}
             >
               {label}
             </a>
           ))}
+          <button
+            className={`nav-cv-button ${currentView === 'cv' ? 'active' : ''}`}
+            type="button"
+            onClick={() => {
+              onCvClick?.();
+              setOpen(false);
+            }}
+          >
+            CV
+          </button>
         </div>
       </nav>
     </header>

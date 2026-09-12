@@ -8,7 +8,7 @@ export default function IntroScreen() {
   const [charCount, setCharCount] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 7800);
+    const timer = setTimeout(() => setVisible(false), 6200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -20,7 +20,7 @@ export default function IntroScreen() {
     }
 
     if (charCount >= welcomeText.length) return undefined;
-    const delay = charCount === 0 ? 4000 : 3000 / welcomeText.length;
+    const delay = charCount === 0 ? 1400 : 2200 / welcomeText.length;
     const timer = setTimeout(() => setCharCount(count => count + 1), delay);
     return () => clearTimeout(timer);
   }, [charCount]);

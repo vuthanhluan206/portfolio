@@ -147,13 +147,20 @@ textarea {
   gap: 22px;
   text-align: center;
   background: #030303;
-  animation: intro-out 0.8s ease 7s forwards;
+  animation: intro-out 1.6s ease 4.6s forwards;
+  isolation: isolate;
+  transform: translateZ(0);
+  will-change: opacity;
 }
 
 .intro-screen .intro-logo {
-  width: 348px;
+  width: 300px;
   opacity: 0;
-  animation: intro-logo-in 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  filter: invert(94%) sepia(10%) saturate(357%) hue-rotate(354deg) brightness(102%) contrast(92%);
+  animation: intro-logo-in 1.2s ease-out forwards;
+  backface-visibility: hidden;
+  transform-origin: center;
+  will-change: opacity, transform;
 }
 
 .intro-screen p {
@@ -171,20 +178,12 @@ textarea {
 @keyframes intro-logo-in {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.82);
-    filter: invert(94%) sepia(10%) saturate(357%) hue-rotate(354deg) brightness(102%) contrast(92%) blur(8px);
-  }
-
-  70% {
-    opacity: 1;
-    transform: translateY(0) scale(1.04);
-    filter: invert(94%) sepia(10%) saturate(357%) hue-rotate(354deg) brightness(102%) contrast(92%) blur(0);
+    transform: translate3d(0, 10px, 0) scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: invert(94%) sepia(10%) saturate(357%) hue-rotate(354deg) brightness(102%) contrast(92%) blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
@@ -326,6 +325,7 @@ h6 {
   font-weight: 700;
   text-decoration: none;
   transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  will-change: transform;
 }
 
 .btn:hover,
@@ -474,6 +474,7 @@ h6 {
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.018);
   transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  will-change: transform;
 }
 
 .skill-card:hover {
@@ -560,6 +561,7 @@ h6 {
   height: 100%;
   object-fit: cover;
   transition: transform 0.35s ease;
+  will-change: transform;
 }
 
 .project-body {
