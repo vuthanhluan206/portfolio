@@ -2,7 +2,7 @@ import './index.css';
 import './cv.css';
 
 import { GitBranch, Globe2, Mail, MapPin, Phone } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -165,14 +165,34 @@ function CvPage() {
   );
 }
 
+function HostingNotice() {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <aside className="hosting-notice" role="status" aria-live="polite">
+      <p lang="vi">Chủ website hết lệ phí mua hosting, nên không thể điền form ở contact (nói nhỏ cho biết QR ở cuối trang nhé hihihi).</p>
+      <p lang="en">The website owner's hosting plan has expired, so they can't fill out the contact form (psst: the QR code is at the bottom of the page hihi).</p>
+    </aside>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState('home');
+  const [introDone, setIntroDone] = useState(false);
   const showHome = () => setView('home');
 
   return (
     <>
-      {view === 'home' && <IntroScreen />}
+      {view === 'home' && !introDone && <IntroScreen onComplete={() => setIntroDone(true)} />}
       <Navbar currentView={view} onHomeClick={showHome} onCvClick={() => setView('cv')} />
+      {introDone && <HostingNotice />}
       {view === 'cv' ? (
         <CvPage />
       ) : (
