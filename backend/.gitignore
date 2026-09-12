@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local secrets ###
+.env
+.mvn/maven.config
+
+### Generated diagnostics ###
+*.log
+.github/modernize/
