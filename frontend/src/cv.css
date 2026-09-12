@@ -306,18 +306,69 @@
   }
 
   .cv-sheet {
+    width: 210mm;
+    height: 297mm;
     box-shadow: none;
   }
 }
 
-@media (max-width: 840px) {
+@media screen and (max-width: 900px) {
   .page-wrap {
+    padding: 92px 14px 18px;
     overflow-x: auto;
     place-items: start;
   }
 
   .cv-sheet {
-    flex: 0 0 auto;
+    width: min(210mm, calc(100vw - 28px));
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(220px, 33%) 1fr;
     box-shadow: none;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .page-wrap {
+    padding-top: 86px;
+  }
+
+  .cv-sheet {
+    display: block;
+  }
+
+  .cv-sheet .sidebar,
+  .cv-sheet .main-column {
+    padding: 28px 24px;
+  }
+
+  .cv-sheet .main-column {
+    border-left: 0;
+    border-top: 1px solid var(--cv-rule);
+  }
+
+  .cv-sheet .portrait {
+    width: 136px;
+    height: 136px;
+    margin-bottom: 28px;
+  }
+
+  .cv-sheet .cv-header {
+    padding-top: 0;
+  }
+
+  .cv-sheet .cv-header h1 {
+    font-size: clamp(1.9rem, 9vw, 2.8rem);
+    letter-spacing: 0.1em;
+  }
+
+  .cv-sheet .cv-header p {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+  }
+
+  .cv-sheet .project-heading {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 }
