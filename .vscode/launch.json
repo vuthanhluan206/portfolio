@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run Portfolio Backend",
+      "request": "launch",
+      "mainClass": "com.example.portfolio.PortfolioApplication",
+      "projectName": "portfolio",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "classPaths": ["$Runtime"],
+      "console": "integratedTerminal"
+    }
+  ]
+}
